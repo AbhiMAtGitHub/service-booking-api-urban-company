@@ -1,0 +1,211 @@
+{
+  "info": {
+    "name": "Service Booking API",
+    "_postman_id": "12345678-aaaa-bbbb-cccc-1234567890ab",
+    "description": "Collection to test Auth, Catalog, Booking, and Pro APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup - Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "http://localhost:5000/api/v1/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\":\"Alice\", \"email\":\"alice@example.com\", \"password\":\"Password@123\", \"role\":\"customer\" }"
+            }
+          }
+        },
+        {
+          "name": "Signup - Pro",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "http://localhost:5000/api/v1/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\":\"Bob Pro\", \"email\":\"pro@example.com\", \"password\":\"Password@123\", \"role\":\"pro\" }"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "http://localhost:5000/api/v1/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"email\":\"alice@example.com\", \"password\":\"Password@123\" }"
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <TOKEN_FROM_LOGIN>" }
+            ],
+            "url": "http://localhost:5000/api/v1/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <ADMIN_TOKEN>" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "http://localhost:5000/api/v1/catalog/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Salon\", \"description\": \"Beauty & grooming\" }"
+            }
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/v1/catalog/categories"
+          }
+        },
+        {
+          "name": "Create Service (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <ADMIN_TOKEN>" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "http://localhost:5000/api/v1/catalog/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Haircut\", \"description\": \"At-home haircut\", \"basePrice\": 300, \"category\": \"<CATEGORY_ID>\" }"
+            }
+          }
+        },
+        {
+          "name": "Create AddOn (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <ADMIN_TOKEN>" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "http://localhost:5000/api/v1/catalog/addons",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Beard Trim\", \"extraPrice\": 100, \"service\": \"<SERVICE_ID>\" }"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" },
+              { "key": "Idempotency-Key", "value": "unique-key-123" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "http://localhost:5000/api/v1/bookings",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"service\": \"<SERVICE_ID>\", \"addOns\": [\"<ADDON_ID>\"], \"slot\": \"2025-08-25T10:00:00Z\", \"pro\": \"<PRO_ID>\" }"
+            }
+          }
+        },
+        {
+          "name": "Get My Bookings (Customer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" }
+            ],
+            "url": "http://localhost:5000/api/v1/bookings/me"
+          }
+        },
+        {
+          "name": "Update Booking Status (Pro/Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <PRO_TOKEN>" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "http://localhost:5000/api/v1/bookings/<BOOKING_ID>/status",
+            "body": { "mode": "raw", "raw": "{ \"status\": \"CONFIRMED\" }" }
+          }
+        },
+        {
+          "name": "Create Booking with Location/Pincode (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" },
+              { "key": "Idempotency-Key", "value": "unique-key-456" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "http://localhost:5000/api/v1/bookings",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"service\": \"<SERVICE_ID>\", \"addOns\": [\"<ADDON_ID>\"], \"slot\": \"2025-08-25T10:00:00Z\", \"pro\": \"<PRO_ID>\", \"pincode\": \"560001\", \"customerLocation\": { \"lat\": 12.9716, \"lng\": 77.5946 } }"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pros",
+      "item": [
+        {
+          "name": "Create / Update Pro Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <PRO_TOKEN>" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "http://localhost:5000/api/v1/pros/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"pincodes\": [\"560001\",\"560002\"], \"location\": { \"coordinates\": [77.5946, 12.9716] }, \"coverageRadiusKm\": 15, \"servicesProvided\": [\"<SERVICE_ID1>\", \"<SERVICE_ID2>\"], \"availabilitySlots\": [ { \"start\": \"2025-08-25T09:00:00Z\", \"duration\": 240 }, { \"start\": \"2025-08-26T09:00:00Z\", \"duration\": 240 } ] }"
+            }
+          }
+        },
+        {
+          "name": "Search Pros by Pincode",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/v1/pros/search?pincode=560001&serviceId=<SERVICE_ID>"
+          }
+        },
+        {
+          "name": "Search Pros by Geo Radius",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/v1/pros/search?lat=12.97&lng=77.59&radiusKm=10&serviceId=<SERVICE_ID>"
+          }
+        }
+      ]
+    }
+  ]
+}
