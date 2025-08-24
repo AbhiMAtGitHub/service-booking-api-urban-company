@@ -26,6 +26,7 @@ app.use('/api/v1/auth', require('./routes/auth.routes'));
 app.use('/api/v1/catalog', require('./routes/catalog.routes'));
 app.use('/api/v1/bookings', require('./routes/booking.routes'));
 app.use('/api/v1/pros', require('./routes/pro.routes'));
+app.use("/api/v1", require("./routes/ratings.routes"));
 
 
 app.use((req, res) => res.status(404).json({ error: 'NOT_FOUND' }));

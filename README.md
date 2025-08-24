@@ -88,21 +88,54 @@ npm run dev
 
 ## API Endpoints
 
-### 1. Auth Endpoints
+### 1. Auth
 
-![Auth Endpoints Screenshot](screenshots/auth-endpoints.png)
+| Method | Endpoint            | Role   | Description        |
+|--------|---------------------|--------|--------------------|
+| POST   | /api/v1/auth/signup | Public | Register new user  |
+| POST   | /api/v1/auth/login  | Public | Login & get token  |
+| GET    | /api/v1/auth/me     | Auth   | Get logged-in user |
 
-### 2. Catalog Endpoints
 
-![Catalog Endpoints Screenshot](screenshots/catalog-endpoints.png)
+### 2. Bookings
 
-### 3. Booking Endpoints
+| Method | Endpoint                   | Role      | Description           |
+|--------|-----------------------------|-----------|-----------------------|
+| POST   | /api/v1/bookings           | Customer  | Create a booking      |
+| GET    | /api/v1/bookings/me        | Customer  | Fetch own bookings    |
+| PATCH  | /api/v1/bookings/:id/status | Pro/Admin | Update booking status |
 
-![Booking Endpoints Screenshot](screenshots/booking-endpoints.png)
 
-### 4. Pro Endpoints
+### 3. Catalog (Admin only for create, public for fetch)
 
-![Pro Endpoints Screenshot](screenshots/pro-endpoints.png)
+| Method | Endpoint                    | Role   | Description     |
+|--------|------------------------------|--------|-----------------|
+| POST   | /api/v1/catalog/categories  | Admin  | Create category |
+| GET    | /api/v1/catalog/categories  | Public | Fetch categories|
+| POST   | /api/v1/catalog/services    | Admin  | Create service  |
+| GET    | /api/v1/catalog/services    | Public | Fetch services  |
+| POST   | /api/v1/catalog/addons      | Admin  | Create add-on   |
+| GET    | /api/v1/catalog/addons      | Public | Fetch add-ons   |
+
+
+### 4. Pros
+
+| Method | Endpoint            | Role | Description         |
+|--------|----------------------|------|---------------------|
+| POST   | /api/v1/pros/me     | Pro  | Create/update profile |
+| GET    | /api/v1/pros/me     | Pro  | Fetch own profile   |
+| GET    | /api/v1/pros/search | Public | Search pros       |
+
+### 5. Ratings
+
+| Method | Endpoint                  | Role       | Description                                |
+|--------|---------------------------|------------|--------------------------------------------|
+| POST   | /api/v1/ratings           | Customer   | Create rating (after completed booking)    |
+| PATCH  | /api/v1/ratings/:id       | Customer   | Update own rating                          |
+| DELETE | /api/v1/ratings/:id       | Customer   | Delete own rating                          |
+| GET    | /api/v1/ratings/me        | Customer   | Get customer’s own ratings                 |
+| GET    | /api/v1/ratings/pro/:proId| Public     | List ratings for a pro                     |
+
 
 ## Running Tests
 

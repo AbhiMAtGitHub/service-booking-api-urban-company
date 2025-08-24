@@ -29,6 +29,8 @@ const proProfileSchema = new mongoose.Schema(
     availabilitySlots: [availabilitySlotSchema],
     bio: { type: String },
     meta: { type: Object },
+    avgRating: { type: Number, default: 0 },
+    ratingsCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
