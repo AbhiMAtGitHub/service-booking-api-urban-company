@@ -2,7 +2,7 @@
   "info": {
     "name": "Service Booking API",
     "_postman_id": "12345678-aaaa-bbbb-cccc-1234567890ab",
-    "description": "Collection to test Auth, Catalog, Booking, Pro, and Ratings APIs",
+    "description": "Automated collection to test Auth, Catalog, Pro, Booking, and Ratings APIs end-to-end (with negatives). Uses environment vars to persist tokens and IDs.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -14,65 +14,141 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "http://localhost:5000/api/v1/auth/signup",
+            "url": "{{baseUrl}}/api/v1/auth/signup",
             "body": {
               "mode": "raw",
               "raw": "{ \"name\":\"Admin User\", \"email\":\"admin@example.com\", \"password\":\"Password@123\", \"role\":\"admin\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Signup Admin -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.expect(r).to.have.property('token');",
+                  "pm.environment.set('adminToken', r.token);",
+                  "if (r.user && r.user._id) { pm.environment.set('adminUserId', r.user._id); }"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Signup - Customer",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "http://localhost:5000/api/v1/auth/signup",
+            "url": "{{baseUrl}}/api/v1/auth/signup",
             "body": {
               "mode": "raw",
               "raw": "{ \"name\":\"Alice\", \"email\":\"alice@example.com\", \"password\":\"Password@123\", \"role\":\"customer\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Signup Customer -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.expect(r).to.have.property('token');",
+                  "pm.environment.set('customerToken', r.token);",
+                  "if (r.user && r.user._id) { pm.environment.set('customerUserId', r.user._id); }"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Signup - Pro",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "http://localhost:5000/api/v1/auth/signup",
+            "url": "{{baseUrl}}/api/v1/auth/signup",
             "body": {
               "mode": "raw",
               "raw": "{ \"name\":\"Bob Pro\", \"email\":\"pro@example.com\", \"password\":\"Password@123\", \"role\":\"pro\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Signup Pro -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.expect(r).to.have.property('token');",
+                  "pm.environment.set('proToken', r.token);",
+                  "if (r.user && r.user._id) { pm.environment.set('proUserId', r.user._id); }"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Login (Generic)",
+          "name": "Login (Generic -> Customer)",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "http://localhost:5000/api/v1/auth/login",
+            "url": "{{baseUrl}}/api/v1/auth/login",
             "body": {
               "mode": "raw",
               "raw": "{ \"email\":\"alice@example.com\", \"password\":\"Password@123\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login Customer -> 200', function () { pm.response.to.have.status(200); });",
+                  "var r = pm.response.json();",
+                  "pm.expect(r).to.have.property('token');",
+                  "pm.environment.set('customerToken', r.token);"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Me",
+          "name": "Me (Customer)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer <TOKEN_FROM_LOGIN>" }
-            ],
-            "url": "http://localhost:5000/api/v1/auth/me"
-          }
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Me -> 200', function () { pm.response.to.have.status(200); });",
+                  "var r = pm.response.json();",
+                  "pm.expect(r).to.have.property('role');",
+                  "pm.test('Me role is customer', function () { pm.expect(r.role).to.eql('customer'); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Unauthorized Access (Negative)",
           "request": {
             "method": "GET",
-            "url": "http://localhost:5000/api/v1/auth/me"
-          }
+            "url": "{{baseUrl}}/api/v1/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unauthorized -> 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -84,52 +160,99 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer <ADMIN_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/catalog/categories",
+            "url": "{{baseUrl}}/api/v1/catalog/categories",
             "body": {
               "mode": "raw",
               "raw": "{ \"name\": \"Salon\", \"description\": \"Beauty & grooming\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create Category -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.environment.set('categoryId', r._id);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "List Categories",
           "request": {
             "method": "GET",
-            "url": "http://localhost:5000/api/v1/catalog/categories"
-          }
+            "url": "{{baseUrl}}/api/v1/catalog/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('List Categories -> 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('List Categories -> array', function () { pm.expect(Array.isArray(pm.response.json())).to.be.true; });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create Service (Admin)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer <ADMIN_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/catalog/services",
+            "url": "{{baseUrl}}/api/v1/catalog/services",
             "body": {
               "mode": "raw",
-              "raw": "{ \"name\": \"Haircut\", \"description\": \"At-home haircut\", \"basePrice\": 300, \"category\": \"<CATEGORY_ID>\" }"
+              "raw": "{ \"name\": \"Haircut\", \"description\": \"At-home haircut\", \"basePrice\": 300, \"category\": \"{{categoryId}}\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create Service -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.environment.set('serviceId', r._id);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create AddOn (Admin)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer <ADMIN_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/catalog/addons",
+            "url": "{{baseUrl}}/api/v1/catalog/addons",
             "body": {
               "mode": "raw",
-              "raw": "{ \"name\": \"Beard Trim\", \"extraPrice\": 100, \"service\": \"<SERVICE_ID>\" }"
+              "raw": "{ \"name\": \"Beard Trim\", \"extraPrice\": 100, \"service\": \"{{serviceId}}\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create AddOn -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.environment.set('addOnId', r._id);"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -141,29 +264,65 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer <PRO_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{proToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/pros/me",
+            "url": "{{baseUrl}}/api/v1/pros/me",
             "body": {
               "mode": "raw",
-              "raw": "{ \"pincodes\": [\"560001\",\"560002\"], \"location\": { \"coordinates\": [77.5946, 12.9716] }, \"coverageRadiusKm\": 15, \"servicesProvided\": [\"<SERVICE_ID>\"], \"availabilitySlots\": [ { \"start\": \"2025-08-25T09:00:00Z\", \"duration\": 240 } ] }"
+              "raw": "{ \"pincodes\": [\"560001\",\"560002\"], \"location\": { \"coordinates\": [77.5946, 12.9716] }, \"coverageRadiusKm\": 15, \"servicesProvided\": [\"{{serviceId}}\"], \"availabilitySlots\": [ { \"start\": \"2025-08-25T09:00:00Z\", \"duration\": 240 } ] }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create/Update Pro Profile -> 200/201', function () { pm.expect([200,201]).to.include(pm.response.code); });",
+                  "var r = pm.response.json();",
+                  "pm.environment.set('proId', r._id);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Search Pros by Pincode",
           "request": {
             "method": "GET",
-            "url": "http://localhost:5000/api/v1/pros/search?pincode=560001&serviceId=<SERVICE_ID>"
-          }
+            "url": "{{baseUrl}}/api/v1/pros/search?pincode=560001&serviceId={{serviceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Search by Pincode -> 200', function () { pm.response.to.have.status(200); });",
+                  "var arr = pm.response.json();",
+                  "pm.test('Search by Pincode -> array', function () { pm.expect(Array.isArray(arr)).to.be.true; });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Search Pros by Geo Radius",
           "request": {
             "method": "GET",
-            "url": "http://localhost:5000/api/v1/pros/search?lat=12.97&lng=77.59&radiusKm=10&serviceId=<SERVICE_ID>"
-          }
+            "url": "{{baseUrl}}/api/v1/pros/search?lat=12.97&lng=77.59&radiusKm=10&serviceId={{serviceId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Search by Geo -> 200', function () { pm.response.to.have.status(200); });",
+                  "var arr = pm.response.json();",
+                  "pm.test('Search by Geo -> array', function () { pm.expect(Array.isArray(arr)).to.be.true; });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -172,52 +331,124 @@
       "item": [
         {
           "name": "Create Booking (Customer)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const d = new Date();",
+                  "d.setDate(d.getDate() + 2);",
+                  "d.setUTCHours(10,0,0,0);",
+                  "pm.environment.set('slotISO', d.toISOString());",
+                  "pm.environment.set('idemKey', 'idem-' + Date.now() + '-' + Math.random().toString(36).slice(2,8));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" },
-              { "key": "Idempotency-Key", "value": "unique-key-123" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+              { "key": "Idempotency-Key", "value": "{{idemKey}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/bookings",
+            "url": "{{baseUrl}}/api/v1/bookings",
             "body": {
               "mode": "raw",
-              "raw": "{ \"service\": \"<SERVICE_ID>\", \"slot\": \"2025-08-25T10:00:00Z\", \"pro\": \"<PRO_ID>\" }"
+              "raw": "{ \"service\": \"{{serviceId}}\", \"slot\": \"{{slotISO}}\", \"pro\": \"{{proId}}\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create Booking -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.environment.set('bookingId', r._id);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get My Bookings (Customer)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" }
-            ],
-            "url": "http://localhost:5000/api/v1/bookings/me"
-          }
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": "{{baseUrl}}/api/v1/bookings/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('My Bookings -> 200', function () { pm.response.to.have.status(200); });",
+                  "var arr = pm.response.json();",
+                  "pm.test('My Bookings -> array', function () { pm.expect(Array.isArray(arr)).to.be.true; });",
+                  "pm.test('Contains bookingId', function () { if (arr.length) { pm.expect(arr.map(b=>b._id)).to.include(pm.environment.get('bookingId')); } });"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Update Booking Status (Pro)",
+          "name": "Update Booking Status (Pro -> COMPLETED)",
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer <PRO_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{proToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/bookings/<BOOKING_ID>/status",
+            "url": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/status",
             "body": { "mode": "raw", "raw": "{ \"status\": \"COMPLETED\" }" }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Update Booking Status -> 200', function () { pm.response.to.have.status(200); });",
+                  "var r = pm.response.json();",
+                  "pm.test('Status is COMPLETED', function () { pm.expect(r.status).to.eql('COMPLETED'); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Booking Unauthorized (Negative)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const d = new Date();",
+                  "d.setDate(d.getDate() + 3);",
+                  "d.setUTCHours(11,0,0,0);",
+                  "pm.environment.set('slotISO_NEG', d.toISOString());"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "url": "http://localhost:5000/api/v1/bookings",
+            "url": "{{baseUrl}}/api/v1/bookings",
             "body": {
               "mode": "raw",
-              "raw": "{ \"service\": \"<SERVICE_ID>\", \"slot\": \"2025-08-25T10:00:00Z\", \"pro\": \"<PRO_ID>\" }"
+              "raw": "{ \"service\": \"{{serviceId}}\", \"slot\": \"{{slotISO_NEG}}\", \"pro\": \"{{proId}}\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Booking Unauthorized -> 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -225,66 +456,120 @@
       "name": "Ratings",
       "item": [
         {
-          "name": "Create Rating (Customer)",
+          "name": "Create Rating (Customer -> after COMPLETED)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/ratings",
+            "url": "{{baseUrl}}/api/v1/ratings",
             "body": {
               "mode": "raw",
-              "raw": "{ \"bookingId\": \"<BOOKING_ID>\", \"rating\": 5, \"review\": \"Excellent service!\" }"
+              "raw": "{ \"bookingId\": \"{{bookingId}}\", \"rating\": 5, \"review\": \"Excellent service!\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create Rating -> 201', function () { pm.response.to.have.status(201); });",
+                  "var r = pm.response.json();",
+                  "pm.environment.set('ratingId', r._id);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Rating (Customer)",
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/ratings/<RATING_ID>",
+            "url": "{{baseUrl}}/api/v1/ratings/{{ratingId}}",
             "body": {
               "mode": "raw",
               "raw": "{ \"rating\": 4, \"review\": \"Good but can improve\" }"
             }
-          }
-        },
-        {
-          "name": "Delete Rating (Customer)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer <CUSTOMER_TOKEN>" }
-            ],
-            "url": "http://localhost:5000/api/v1/ratings/<RATING_ID>"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Update Rating -> 200', function () { pm.response.to.have.status(200); });",
+                  "var r = pm.response.json();",
+                  "pm.test('Updated rating = 4', function () { pm.expect(r.rating).to.eql(4); });"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Ratings for Pro (Public)",
           "request": {
             "method": "GET",
-            "url": "http://localhost:5000/api/v1/ratings/pro/<PRO_ID>"
-          }
+            "url": "{{baseUrl}}/api/v1/ratings/pro/{{proId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get Ratings for Pro -> 200', function () { pm.response.to.have.status(200); });",
+                  "var r = pm.response.json();",
+                  "pm.test('Ratings list is array or has stats', function () { pm.expect(typeof r === 'object').to.be.true; });"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Rating Forbidden (Pro trying to rate)",
+          "name": "Rating Forbidden (Pro trying to rate) - Negative",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer <PRO_TOKEN>" },
+              { "key": "Authorization", "value": "Bearer {{proToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "url": "http://localhost:5000/api/v1/ratings",
+            "url": "{{baseUrl}}/api/v1/ratings",
             "body": {
               "mode": "raw",
-              "raw": "{ \"bookingId\": \"<BOOKING_ID>\", \"rating\": 5, \"review\": \"Hacker attempt\" }"
+              "raw": "{ \"bookingId\": \"{{bookingId}}\", \"rating\": 5, \"review\": \"Hacker attempt\" }"
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Pro cannot create rating -> 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Rating (Customer)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": "{{baseUrl}}/api/v1/ratings/{{ratingId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Delete Rating -> 200/204', function () { pm.expect([200,204]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
